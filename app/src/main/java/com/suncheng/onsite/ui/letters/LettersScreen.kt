@@ -5,17 +5,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
@@ -35,26 +40,41 @@ fun LettersScreen(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
+    val display = remember(notes) {
+        if (notes.isEmpty()) mockLetters() else notes
+    }
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp),
+            .padding(top = statusTop),
     ) {
-        Spacer(Modifier.height(12.dp))
-        Text("信", color = IceFg, fontSize = 28.sp)
-        Text("只看见地点和状态。正文要到场才开。", color = IceMuted, fontSize = 13.sp)
-        Spacer(Modifier.height(16.dp))
-        if (notes.isEmpty()) {
-            Text("还没有留下信。", color = IceDim, fontSize = 15.sp)
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = 140.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(notes, key = { it.id }) { note ->
-                    LetterRow(note, backdrop)
-                }
+        Column(Modifier.padding(horizontal = 20.dp)) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "信",
+                color = IceFg,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.6).sp,
+            )
+            Text("只看见地点和状态。正文要到场才开。", color = IceMuted, fontSize = 13.sp)
+            Spacer(Modifier.height(14.dp))
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                bottom = navBottom + 88.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(display, key = { it.id }) { note ->
+                LetterRow(note, backdrop)
             }
         }
     }

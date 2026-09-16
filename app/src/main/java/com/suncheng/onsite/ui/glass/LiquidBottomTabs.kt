@@ -5,8 +5,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,6 +30,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
@@ -45,10 +48,6 @@ data class BottomTab(
     val icon: ImageVector,
 )
 
-/**
- * 悬浮胶囊底栏。对照 Kyant LiquidBottomTabs：
- * 整条取样背后内容 + 选中液滴单独一层折射。
- */
 @Composable
 fun OnSiteLiquidBottomTabs(
     tabs: List<BottomTab>,
@@ -58,19 +57,19 @@ fun OnSiteLiquidBottomTabs(
     modifier: Modifier = Modifier,
 ) {
     val capsule = Capsule()
-    val containerColor = Color(0xFF121212).copy(alpha = 0.38f)
+    val containerColor = Color(0xFF1C1C1E).copy(alpha = 0.42f)
     val tabCount = tabs.size.coerceAtLeast(1)
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp),
+            .height(56.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         val tabWidth = maxWidth / tabCount
         val dropletOffset by animateDpAsState(
             targetValue = tabWidth * selectedIndex,
-            animationSpec = spring(dampingRatio = 0.78f, stiffness = 380f),
+            animationSpec = spring(dampingRatio = 0.86f, stiffness = 420f),
             label = "droplet",
         )
 
@@ -82,23 +81,23 @@ fun OnSiteLiquidBottomTabs(
                     shape = { capsule },
                     effects = {
                         vibrancy()
-                        blur(8.dp.toPx())
+                        blur(12.dp.toPx())
                         if (canUseLens()) {
-                            lens(24.dp.toPx(), 24.dp.toPx())
+                            lens(20.dp.toPx(), 20.dp.toPx())
                         }
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.45f) },
+                    highlight = { Highlight.Default.copy(alpha = 0.38f) },
                     onDrawSurface = { drawRect(containerColor) },
                 )
         )
 
         Box(
             Modifier
-                .padding(4.dp)
+                .padding(horizontal = 6.dp, vertical = 5.dp)
                 .offset(x = dropletOffset)
-                .width(tabWidth - 8.dp)
+                .width(tabWidth - 12.dp)
                 .fillMaxHeight()
-                .padding(vertical = 4.dp)
+                .padding(vertical = 1.dp)
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { capsule },
@@ -107,14 +106,14 @@ fun OnSiteLiquidBottomTabs(
                         blur(6.dp.toPx())
                         if (canUseLens()) {
                             lens(
-                                refractionHeight = 12.dp.toPx(),
-                                refractionAmount = 16.dp.toPx(),
+                                refractionHeight = 10.dp.toPx(),
+                                refractionAmount = 14.dp.toPx(),
                                 chromaticAberration = true,
                             )
                         }
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.7f) },
-                    onDrawSurface = { drawRect(Color(0xFF1A1A1A).copy(alpha = 0.22f)) },
+                    highlight = { Highlight.Default.copy(alpha = 0.62f) },
+                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
                 )
         )
 
@@ -122,11 +121,11 @@ fun OnSiteLiquidBottomTabs(
             tabs.forEachIndexed { index, tab ->
                 val selected = index == selectedIndex
                 val scale by animateFloatAsState(
-                    targetValue = if (selected) 1.12f else 1f,
-                    animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
+                    targetValue = if (selected) 1.06f else 1f,
+                    animationSpec = spring(dampingRatio = 0.72f, stiffness = 480f),
                     label = "tabScale$index",
                 )
-                Box(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -136,24 +135,25 @@ fun OnSiteLiquidBottomTabs(
                             role = Role.Tab,
                             onClick = { onSelected(index) },
                         ),
-                    contentAlignment = Alignment.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = tab.label,
-                            modifier = Modifier
-                                .size(18.dp)
-                                .scale(scale),
-                            tint = if (selected) IceFg else IceMuted,
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = tab.label,
-                            color = if (selected) IceFg else IceMuted,
-                            fontSize = 13.sp,
-                        )
-                    }
+                    Icon(
+                        imageVector = tab.icon,
+                        contentDescription = tab.label,
+                        modifier = Modifier
+                            .size(22.dp)
+                            .scale(scale),
+                        tint = if (selected) IceFg else IceMuted,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = tab.label,
+                        color = if (selected) IceFg else IceMuted,
+                        fontSize = 10.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        letterSpacing = 0.2.sp,
+                    )
                 }
             }
         }
