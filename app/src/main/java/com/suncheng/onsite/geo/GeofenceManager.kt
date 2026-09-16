@@ -12,7 +12,7 @@ import com.suncheng.onsite.data.NoteEntity
 import kotlinx.coroutines.tasks.await
 
 class GeofenceManager(private val context: Context) {
-    private val client = LocationServices.getGeofencingClient(context)
+    private val client by lazy { LocationServices.getGeofencingClient(context) }
 
     private val pendingIntent: PendingIntent by lazy {
         val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
@@ -26,6 +26,7 @@ class GeofenceManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun register(note: NoteEntity) {
+        if (!playServicesReady(context)) return
         val now = System.currentTimeMillis()
         val ttl = (note.expiresAt - now).coerceAtLeast(1_000L)
         val geofence = Geofence.Builder()
@@ -44,11 +45,13 @@ class GeofenceManager(private val context: Context) {
     }
 
     suspend fun unregister(id: String) {
+        if (!playServicesReady(context)) return
         runCatching { client.removeGeofences(listOf(id)).await() }
             .onFailure { Log.w(TAG, "unregister failed $id", it) }
     }
 
     suspend fun replaceAll(notes: List<NoteEntity>) {
+        if (!playServicesReady(context)) return
         runCatching { client.removeGeofences(pendingIntent).await() }
         val now = System.currentTimeMillis()
         notes
