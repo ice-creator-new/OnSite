@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">到场</string>
+    <string name="notification_channel_name">到场提醒</string>
+    <string name="notification_channel_desc">你走进自己钉过的地点时提醒。通知不含正文。</string>
+    <string name="notification_title">你到了</string>
+    <string name="notification_body">有一封信。</string>
+    <string name="bg_location_rationale">只监测你钉过的地点。到了才提醒。不会记录你去过哪里。</string>
+</resources>
