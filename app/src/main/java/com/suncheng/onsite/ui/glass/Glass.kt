@@ -22,17 +22,16 @@ import com.kyant.backdrop.highlight.Highlight
 import com.suncheng.onsite.ui.theme.GlassFill
 import com.suncheng.onsite.ui.theme.HighlightCold
 
-fun canUseBackdropEngine(): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
-    val token = listOf(
-        Build.MANUFACTURER,
-        Build.BRAND,
-        Build.FINGERPRINT,
-    ).joinToString(" ").lowercase()
-    return listOf("xiaomi", "redmi", "poco", "blackshark").none { token.contains(it) }
+fun isXiaomiFamily(): Boolean {
+    val token = listOf(Build.MANUFACTURER, Build.BRAND, Build.FINGERPRINT)
+        .joinToString(" ")
+        .lowercase()
+    return listOf("xiaomi", "redmi", "poco", "blackshark").any { token.contains(it) }
 }
 
-fun canUseLens(): Boolean = canUseBackdropEngine()
+fun canUseBackdropEngine(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+fun canUseLens(): Boolean = canUseBackdropEngine() && !isXiaomiFamily()
 
 fun Modifier.liquidSurface(
     backdrop: Backdrop,
@@ -48,9 +47,9 @@ fun Modifier.liquidSurface(
         backdrop = backdrop,
         shape = { shape },
         effects = {
-            vibrancy()
-            blur(8.dp.toPx())
+            blur(if (isXiaomiFamily()) 18.dp.toPx() else 8.dp.toPx())
             if (canUseLens()) {
+                vibrancy()
                 lens(
                     refractionHeight = refraction.toPx(),
                     refractionAmount = refraction.toPx(),
@@ -59,7 +58,7 @@ fun Modifier.liquidSurface(
             }
         },
         highlight = {
-            Highlight.Default.copy(alpha = if (canUseLens()) 0.55f else 0.25f)
+            Highlight.Default.copy(alpha = if (canUseLens()) 0.55f else 0.28f)
         },
         onDrawSurface = { drawRect(fill) },
     )
