@@ -82,9 +82,9 @@ fun OnSiteLiquidBottomTabs(
                             backdrop = backdrop,
                             shape = { capsule },
                             effects = {
-                                vibrancy()
-                                blur(12.dp.toPx())
+                                blur(if (isXiaomiFamily()) 20.dp.toPx() else 12.dp.toPx())
                                 if (canUseLens()) {
+                                    vibrancy()
                                     lens(20.dp.toPx(), 20.dp.toPx())
                                 }
                             },
@@ -110,9 +110,9 @@ fun OnSiteLiquidBottomTabs(
                             backdrop = backdrop,
                             shape = { capsule },
                             effects = {
-                                vibrancy()
-                                blur(6.dp.toPx())
+                                blur(if (isXiaomiFamily()) 16.dp.toPx() else 6.dp.toPx())
                                 if (canUseLens()) {
+                                    vibrancy()
                                     lens(
                                         refractionHeight = 10.dp.toPx(),
                                         refractionAmount = 14.dp.toPx(),
