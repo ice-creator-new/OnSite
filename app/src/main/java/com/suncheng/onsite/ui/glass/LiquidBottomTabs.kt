@@ -64,10 +64,20 @@ data class BottomTab(
     val icon: ImageVector,
 )
 
-private val Settle = spring<Float>(dampingRatio = 0.68f, stiffness = 260f)
-private val PressSpring = spring<Float>(dampingRatio = 0.82f, stiffness = 500f)
-private val TabMaxWidth = 64.dp
-private val BarHeight = 58.dp
+private val Settle = spring<Float>(
+    dampingRatio = 0.58f,
+    stiffness = 170f,
+    visibilityThreshold = 0.2f,
+)
+private val PressSpring = spring<Float>(dampingRatio = 0.78f, stiffness = 380f)
+private val TabMaxWidth = 84.dp
+private val BarHeight = 66.dp
+
+private fun rubber(value: Float, min: Float, max: Float): Float {
+    if (value < min) return min + (value - min) * 0.38f
+    if (value > max) return max + (value - max) * 0.38f
+    return value
+}
 
 @Composable
 fun OnSiteLiquidBottomTabs(
@@ -159,7 +169,7 @@ fun OnSiteLiquidBottomTabs(
                             if (delta == 0f) continue
                             tracker.addPosition(change.uptimeMillis, change.position)
                             change.consume()
-                            dragX = (dragX + delta).coerceIn(0f, maxTravel)
+                            dragX = rubber(dragX + delta, 0f, maxTravel)
                             val hover = indexOf(dragX)
                             if (hover != lastHover) {
                                 lastHover = hover
@@ -168,16 +178,19 @@ fun OnSiteLiquidBottomTabs(
                             }
                         }
 
-                        dragging = false
-                        scope.launch { press.animateTo(0f, PressSpring) }
-                        val projected = (dragX + tracker.calculateVelocity().x * 0.08f)
-                            .coerceIn(0f, maxTravel)
-                        val target = indexOf(projected)
+                        val end = dragX
+                        val projected = rubber(
+                            end + tracker.calculateVelocity().x * 0.12f,
+                            0f,
+                            maxTravel,
+                        )
+                        val target = indexOf(projected.coerceIn(0f, maxTravel))
                         hoverIndex = target
                         if (target != selectedIndex) onSelected(target)
-                        val end = dragX
                         scope.launch {
                             settled.snapTo(end)
+                            dragging = false
+                            press.animateTo(0f, PressSpring)
                             settled.animateTo(target * tabWidthPx, Settle)
                         }
                     }
@@ -241,7 +254,7 @@ fun OnSiteLiquidBottomTabs(
                         Icon(
                             imageVector = tab.icon,
                             contentDescription = tab.label,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = tint,
                         )
                         Spacer(Modifier.height(1.dp))
