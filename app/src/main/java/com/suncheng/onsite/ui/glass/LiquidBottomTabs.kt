@@ -66,8 +66,8 @@ data class BottomTab(
 
 private val Settle = spring<Float>(dampingRatio = 0.68f, stiffness = 260f)
 private val PressSpring = spring<Float>(dampingRatio = 0.82f, stiffness = 500f)
-private val TabMaxWidth = 76.dp
-private val BarHeight = 49.dp
+private val TabMaxWidth = 64.dp
+private val BarHeight = 58.dp
 
 @Composable
 fun OnSiteLiquidBottomTabs(
