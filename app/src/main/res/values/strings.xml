@@ -5,4 +5,8 @@
     <string name="notification_title">你到了</string>
     <string name="notification_body">有一封信。</string>
     <string name="bg_location_rationale">只监测你钉过的地点。到了才提醒。不会记录你去过哪里。</string>
+    <string name="watch_channel_name">地点守候</string>
+    <string name="watch_channel_desc">有未拆的信时，用系统定位判断你是否走进钉点。</string>
+    <string name="watch_notification_title">到场正在守候</string>
+    <string name="watch_notification_body">走进你钉过的地点才会提醒。不含正文。</string>
 </resources>

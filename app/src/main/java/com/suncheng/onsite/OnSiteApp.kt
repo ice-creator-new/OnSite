@@ -6,6 +6,10 @@ import com.suncheng.onsite.data.NoteRepository
 import com.suncheng.onsite.geo.GeofenceManager
 import com.suncheng.onsite.geo.LocationClient
 import com.suncheng.onsite.notify.ArriveNotifier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class OnSiteApp : Application() {
     lateinit var container: AppContainer
@@ -20,6 +24,9 @@ class OnSiteApp : Application() {
             location = LocationClient(this),
             geofences = GeofenceManager(this),
         )
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            container.geofences.replaceAll(container.notes.activeNotes())
+        }
     }
 }
 

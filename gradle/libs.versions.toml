@@ -10,12 +10,10 @@ kotlin = "2.4.10"
 ksp = "2.3.12"
 composeBom = "2026.02.01"
 room = "2.8.1"
-playServicesLocation = "21.3.0"
 navigationCompose = "2.9.4"
 coil = "2.7.0"
 backdrop = "2.0.1"
 shapes = "1.2.1"
-coroutines = "1.10.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,11 +37,9 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 backdrop-android = { group = "io.github.kyant0", name = "backdrop-android", version.ref = "backdrop" }
 shapes-android = { group = "io.github.kyant0", name = "shapes-android", version.ref = "shapes" }
-kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
