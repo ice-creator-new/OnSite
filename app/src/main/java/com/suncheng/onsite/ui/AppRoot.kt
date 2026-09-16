@@ -31,6 +31,7 @@ import com.suncheng.onsite.OnSiteViewModel
 import com.suncheng.onsite.data.Prefs
 import com.suncheng.onsite.ui.glass.BottomTab
 import com.suncheng.onsite.ui.glass.OnSiteLiquidBottomTabs
+import com.suncheng.onsite.ui.glass.canUseBackdropEngine
 import com.suncheng.onsite.ui.letters.LettersScreen
 import com.suncheng.onsite.ui.open.OpenScreen
 import com.suncheng.onsite.ui.permission.PermissionScreen
@@ -84,12 +85,13 @@ fun AppRoot(
         drawRect(IceBg)
         drawContent()
     }
+    val useEngine = canUseBackdropEngine()
 
     Box(Modifier.fillMaxSize()) {
         Box(
             Modifier
                 .fillMaxSize()
-                .layerBackdrop(backdrop),
+                .then(if (useEngine) Modifier.layerBackdrop(backdrop) else Modifier),
         ) {
             IcyBackdrop()
             when (tab) {
