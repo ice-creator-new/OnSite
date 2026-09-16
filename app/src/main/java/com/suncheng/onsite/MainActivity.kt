@@ -26,11 +26,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-        )
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        CrashLog.install(applicationContext)
+        runCatching {
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            )
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
         openNoteId = intent.getStringExtra(ArriveNotifier.EXTRA_NOTE_ID)
         setContent {
             OnSiteTheme {
