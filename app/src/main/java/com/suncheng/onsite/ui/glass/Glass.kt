@@ -31,7 +31,7 @@ fun isXiaomiFamily(): Boolean {
 
 fun canUseBackdropEngine(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
-fun canUseLens(): Boolean = canUseBackdropEngine() && !isXiaomiFamily()
+fun canUseLens(): Boolean = canUseBackdropEngine()
 
 fun Modifier.liquidSurface(
     backdrop: Backdrop,
@@ -43,24 +43,23 @@ fun Modifier.liquidSurface(
     if (!canUseBackdropEngine()) {
         return fallbackGlass(shape)
     }
+    val mild = isXiaomiFamily()
     return this.drawBackdrop(
         backdrop = backdrop,
         shape = { shape },
         effects = {
-            blur(if (isXiaomiFamily()) 18.dp.toPx() else 8.dp.toPx())
-            if (canUseLens()) {
-                vibrancy()
-                lens(
-                    refractionHeight = refraction.toPx(),
-                    refractionAmount = refraction.toPx(),
-                    chromaticAberration = chromatic,
-                )
-            }
+            blur(if (mild) 4.dp.toPx() else 5.dp.toPx())
+            if (!mild) vibrancy()
+            lens(
+                refractionHeight = (if (mild) 12.dp else refraction).toPx(),
+                refractionAmount = (if (mild) 16.dp else refraction).toPx(),
+                chromaticAberration = chromatic && !mild,
+            )
         },
         highlight = {
-            Highlight.Default.copy(alpha = if (canUseLens()) 0.55f else 0.28f)
+            Highlight.Default.copy(alpha = 0.62f)
         },
-        onDrawSurface = { drawRect(fill) },
+        onDrawSurface = { drawRect(fill.copy(alpha = if (mild) 0.22f else fill.alpha)) },
     )
 }
 
