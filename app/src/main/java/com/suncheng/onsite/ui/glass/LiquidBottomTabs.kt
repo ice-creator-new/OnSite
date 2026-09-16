@@ -57,7 +57,7 @@ fun OnSiteLiquidBottomTabs(
     modifier: Modifier = Modifier,
 ) {
     val capsule = Capsule()
-    val containerColor = Color(0xFF1C1C1E).copy(alpha = 0.42f)
+    val containerColor = Color(0xFF1C1C1E).copy(alpha = if (isXiaomiFamily()) 0.16f else 0.28f)
     val tabCount = tabs.size.coerceAtLeast(1)
 
     BoxWithConstraints(
@@ -82,13 +82,15 @@ fun OnSiteLiquidBottomTabs(
                             backdrop = backdrop,
                             shape = { capsule },
                             effects = {
-                                blur(if (isXiaomiFamily()) 20.dp.toPx() else 12.dp.toPx())
-                                if (canUseLens()) {
-                                    vibrancy()
-                                    lens(20.dp.toPx(), 20.dp.toPx())
-                                }
+                                blur(4.dp.toPx())
+                                if (!isXiaomiFamily()) vibrancy()
+                                lens(
+                                    refractionHeight = 14.dp.toPx(),
+                                    refractionAmount = 18.dp.toPx(),
+                                    chromaticAberration = !isXiaomiFamily(),
+                                )
                             },
-                            highlight = { Highlight.Default.copy(alpha = 0.38f) },
+                            highlight = { Highlight.Default.copy(alpha = 0.55f) },
                             onDrawSurface = { drawRect(containerColor) },
                         )
                     } else {
@@ -110,18 +112,16 @@ fun OnSiteLiquidBottomTabs(
                             backdrop = backdrop,
                             shape = { capsule },
                             effects = {
-                                blur(if (isXiaomiFamily()) 16.dp.toPx() else 6.dp.toPx())
-                                if (canUseLens()) {
-                                    vibrancy()
-                                    lens(
-                                        refractionHeight = 10.dp.toPx(),
-                                        refractionAmount = 14.dp.toPx(),
-                                        chromaticAberration = true,
-                                    )
-                                }
+                                blur(3.dp.toPx())
+                                if (!isXiaomiFamily()) vibrancy()
+                                lens(
+                                    refractionHeight = 10.dp.toPx(),
+                                    refractionAmount = 16.dp.toPx(),
+                                    chromaticAberration = !isXiaomiFamily(),
+                                )
                             },
-                            highlight = { Highlight.Default.copy(alpha = 0.62f) },
-                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
+                            highlight = { Highlight.Default.copy(alpha = 0.72f) },
+                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.08f)) },
                         )
                     } else {
                         Modifier.fallbackGlass(capsule)
