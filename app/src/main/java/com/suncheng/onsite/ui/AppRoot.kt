@@ -63,7 +63,11 @@ fun AppRoot(
     }
 
     if (showOnboarding) {
-        Box(Modifier.fillMaxSize().background(IceBg)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(IceBg),
+        ) {
             IcyBackdrop()
             PermissionScreen(
                 onReady = {
@@ -82,10 +86,18 @@ fun AppRoot(
     }
 
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .layerBackdrop(backdrop),
+        ) {
             IcyBackdrop()
             when (tab) {
-                0 -> LettersScreen(notes = state.notes, backdrop = backdrop, modifier = Modifier.fillMaxSize())
+                0 -> LettersScreen(
+                    notes = state.notes,
+                    backdrop = backdrop,
+                    modifier = Modifier.fillMaxSize(),
+                )
                 1 -> WriteScreen(
                     placePreview = state.placePreview,
                     busy = state.writeBusy,
@@ -124,7 +136,7 @@ fun AppRoot(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
         )
     }
 }
