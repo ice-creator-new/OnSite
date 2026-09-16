@@ -4,86 +4,46 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
-import android.os.Build
-import android.os.CancellationSignal
-import android.os.Looper
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 class LocationClient(private val context: Context) {
-    private val manager = context.getSystemService(LocationManager::class.java)
+    private val fused = LocationServices.getFusedLocationProviderClient(context)
 
     @SuppressLint("MissingPermission")
     suspend fun current(): Location? {
-        val live = requestCurrent()
-        if (live != null) return live
+        val fresh = requestCurrent()
+        if (fresh != null) return fresh
         return lastKnown()
     }
 
     @SuppressLint("MissingPermission")
-    fun lastKnown(): Location? {
-        val gps = runCatching { manager.getLastKnownLocation(LocationManager.GPS_PROVIDER) }.getOrNull()
-        val net = runCatching { manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) }.getOrNull()
-        return listOfNotNull(gps, net).maxByOrNull { it.time }
+    private suspend fun requestCurrent(): Location? = suspendCancellableCoroutine { cont ->
+        val token = CancellationTokenSource()
+        cont.invokeOnCancellation { token.cancel() }
+        try {
+            fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, token.token)
+                .addOnSuccessListener { cont.resume(it) }
+                .addOnFailureListener { cont.resume(null) }
+        } catch (_: SecurityException) {
+            cont.resume(null)
+        }
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun requestCurrent(): Location? = suspendCancellableCoroutine { cont ->
-        val provider = bestProvider()
-        if (provider == null) {
-            cont.resume(null)
-            return@suspendCancellableCoroutine
-        }
-        val finished = AtomicBoolean(false)
-        fun done(location: Location?) {
-            if (finished.compareAndSet(false, true) && cont.isActive) {
-                cont.resume(location)
-            }
-        }
+    private suspend fun lastKnown(): Location? = suspendCancellableCoroutine { cont ->
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val signal = CancellationSignal()
-                cont.invokeOnCancellation { signal.cancel() }
-                manager.getCurrentLocation(
-                    provider,
-                    signal,
-                    context.mainExecutor,
-                ) { location -> done(location) }
-            } else {
-                val listener = object : android.location.LocationListener {
-                    override fun onLocationChanged(location: Location) {
-                        manager.removeUpdates(this)
-                        done(location)
-                    }
-                }
-                cont.invokeOnCancellation { manager.removeUpdates(listener) }
-                manager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
-            }
+            fused.lastLocation
+                .addOnSuccessListener { cont.resume(it) }
+                .addOnFailureListener { cont.resume(null) }
         } catch (_: SecurityException) {
-            done(null)
-        } catch (_: IllegalArgumentException) {
-            done(null)
-        }
-    }
-
-    fun bestProvider(): String? {
-        return when {
-            manager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-            manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-            manager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER) -> LocationManager.PASSIVE_PROVIDER
-            else -> null
-        }
-    }
-
-    fun enabledProviders(): List<String> {
-        return buildList {
-            if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) add(LocationManager.GPS_PROVIDER)
-            if (manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) add(LocationManager.NETWORK_PROVIDER)
+            cont.resume(null)
         }
     }
 
