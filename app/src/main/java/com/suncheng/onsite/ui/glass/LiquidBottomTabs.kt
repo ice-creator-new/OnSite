@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.Capsule
 import com.suncheng.onsite.ui.theme.IceFg
 import com.suncheng.onsite.ui.theme.IceMuted
 
@@ -57,7 +57,7 @@ fun OnSiteLiquidBottomTabs(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
-    val capsule = RoundedCornerShape(percent = 50)
+    val capsule = Capsule()
     val containerColor = Color(0xFF121212).copy(alpha = 0.38f)
     val tabCount = tabs.size.coerceAtLeast(1)
 
