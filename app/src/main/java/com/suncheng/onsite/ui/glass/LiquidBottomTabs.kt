@@ -76,19 +76,25 @@ fun OnSiteLiquidBottomTabs(
         Box(
             Modifier
                 .fillMaxSize()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { capsule },
-                    effects = {
-                        vibrancy()
-                        blur(12.dp.toPx())
-                        if (canUseLens()) {
-                            lens(20.dp.toPx(), 20.dp.toPx())
-                        }
+                .then(
+                    if (canUseBackdropEngine()) {
+                        Modifier.drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { capsule },
+                            effects = {
+                                vibrancy()
+                                blur(12.dp.toPx())
+                                if (canUseLens()) {
+                                    lens(20.dp.toPx(), 20.dp.toPx())
+                                }
+                            },
+                            highlight = { Highlight.Default.copy(alpha = 0.38f) },
+                            onDrawSurface = { drawRect(containerColor) },
+                        )
+                    } else {
+                        Modifier.fallbackGlass(capsule)
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.38f) },
-                    onDrawSurface = { drawRect(containerColor) },
-                )
+                ),
         )
 
         Box(
@@ -98,23 +104,29 @@ fun OnSiteLiquidBottomTabs(
                 .width(tabWidth - 12.dp)
                 .fillMaxHeight()
                 .padding(vertical = 1.dp)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { capsule },
-                    effects = {
-                        vibrancy()
-                        blur(6.dp.toPx())
-                        if (canUseLens()) {
-                            lens(
-                                refractionHeight = 10.dp.toPx(),
-                                refractionAmount = 14.dp.toPx(),
-                                chromaticAberration = true,
-                            )
-                        }
+                .then(
+                    if (canUseBackdropEngine()) {
+                        Modifier.drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { capsule },
+                            effects = {
+                                vibrancy()
+                                blur(6.dp.toPx())
+                                if (canUseLens()) {
+                                    lens(
+                                        refractionHeight = 10.dp.toPx(),
+                                        refractionAmount = 14.dp.toPx(),
+                                        chromaticAberration = true,
+                                    )
+                                }
+                            },
+                            highlight = { Highlight.Default.copy(alpha = 0.62f) },
+                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
+                        )
+                    } else {
+                        Modifier.fallbackGlass(capsule)
                     },
-                    highlight = { Highlight.Default.copy(alpha = 0.62f) },
-                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
-                )
+                ),
         )
 
         Row(Modifier.fillMaxSize()) {
