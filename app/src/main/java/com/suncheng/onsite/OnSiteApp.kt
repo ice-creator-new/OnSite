@@ -5,6 +5,7 @@ import com.suncheng.onsite.data.AppDatabase
 import com.suncheng.onsite.data.NoteRepository
 import com.suncheng.onsite.geo.GeofenceManager
 import com.suncheng.onsite.geo.LocationClient
+import com.suncheng.onsite.geo.playServicesReady
 import com.suncheng.onsite.notify.ArriveNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,15 +18,21 @@ class OnSiteApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        ArriveNotifier.ensureChannel(this)
+        CrashLog.install(this)
+        runCatching { ArriveNotifier.ensureChannel(this) }
+            .onFailure { CrashLog.write(this, it) }
         val db = AppDatabase.create(this)
         container = AppContainer(
             notes = NoteRepository(db.noteDao()),
             location = LocationClient(this),
             geofences = GeofenceManager(this),
         )
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            container.geofences.replaceAll(container.notes.activeNotes())
+        if (playServicesReady(this)) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                runCatching {
+                    container.geofences.replaceAll(container.notes.activeNotes())
+                }.onFailure { CrashLog.write(this@OnSiteApp, it) }
+            }
         }
     }
 }
