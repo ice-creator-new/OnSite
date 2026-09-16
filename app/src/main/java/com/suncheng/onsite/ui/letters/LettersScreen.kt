@@ -1,5 +1,6 @@
 package com.suncheng.onsite.ui.letters
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,13 +21,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.kyant.backdrop.Backdrop
 import com.suncheng.onsite.data.NoteListItem
 import com.suncheng.onsite.data.NoteStatus
-import com.suncheng.onsite.ui.glass.liquidSurface
+import com.suncheng.onsite.ui.theme.IceBgElevated
 import com.suncheng.onsite.ui.theme.IceDim
 import com.suncheng.onsite.ui.theme.IceFg
 import com.suncheng.onsite.ui.theme.IceMuted
@@ -71,33 +75,46 @@ fun LettersScreen(
                 end = 20.dp,
                 bottom = navBottom + 88.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(display, key = { it.id }) { note ->
-                LetterRow(note, backdrop)
+                LetterRow(note)
             }
         }
     }
 }
 
 @Composable
-private fun LetterRow(note: NoteListItem, backdrop: Backdrop) {
+private fun LetterRow(note: NoteListItem) {
+    val shape = RoundedCornerShape(22.dp)
     Column(
         Modifier
             .fillMaxWidth()
-            .liquidSurface(backdrop, shape = RoundedCornerShape(22.dp), refraction = 16.dp)
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .clip(shape)
+            .background(IceBgElevated),
     ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(note.placeLabel, color = IceFg, fontSize = 16.sp, modifier = Modifier.weight(1f))
-            Text(note.status.label(), color = note.status.tint(), fontSize = 12.sp)
+        if (!note.coverUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = note.coverUrl,
+                contentDescription = note.placeLabel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(148.dp),
+                contentScale = ContentScale.Crop,
+            )
         }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "${formatTime(note.createdAt)} · ${note.radiusMeters.toInt()}m · ${if (note.hasImage) "有图" else "无图"}",
-            color = IceDim,
-            fontSize = 12.sp,
-        )
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(note.placeLabel, color = IceFg, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text(note.status.label(), color = note.status.tint(), fontSize = 12.sp)
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "${formatTime(note.createdAt)} · ${note.radiusMeters.toInt()}m · ${if (note.hasImage) "有图" else "无图"}",
+                color = IceDim,
+                fontSize = 12.sp,
+            )
+        }
     }
 }
 
