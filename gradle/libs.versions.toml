@@ -7,7 +7,7 @@ espressoCore = "3.7.0"
 lifecycle = "2.11.0"
 activityCompose = "1.13.0"
 kotlin = "2.2.10"
-ksp = "2.2.10-2.0.2"
+ksp = "2.3.12"
 composeBom = "2026.02.01"
 room = "2.8.1"
 playServicesLocation = "21.3.0"
@@ -46,5 +46,4 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
