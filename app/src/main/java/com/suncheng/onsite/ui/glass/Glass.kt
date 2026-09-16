@@ -22,7 +22,17 @@ import com.kyant.backdrop.highlight.Highlight
 import com.suncheng.onsite.ui.theme.GlassFill
 import com.suncheng.onsite.ui.theme.HighlightCold
 
-fun canUseLens(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+fun canUseBackdropEngine(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+    val token = listOf(
+        Build.MANUFACTURER,
+        Build.BRAND,
+        Build.FINGERPRINT,
+    ).joinToString(" ").lowercase()
+    return listOf("xiaomi", "redmi", "poco", "blackshark").none { token.contains(it) }
+}
+
+fun canUseLens(): Boolean = canUseBackdropEngine()
 
 fun Modifier.liquidSurface(
     backdrop: Backdrop,
@@ -31,6 +41,9 @@ fun Modifier.liquidSurface(
     fill: Color = GlassFill,
     chromatic: Boolean = false,
 ): Modifier {
+    if (!canUseBackdropEngine()) {
+        return fallbackGlass(shape)
+    }
     return this.drawBackdrop(
         backdrop = backdrop,
         shape = { shape },
@@ -56,9 +69,10 @@ fun Modifier.fallbackGlass(shape: Shape = RoundedCornerShape(24.dp)): Modifier {
     return this
         .clip(shape)
         .drawWithContent {
+            val radius = CornerRadius(size.minDimension / 2f, size.minDimension / 2f)
             drawRoundRect(
                 color = Color(0xCC121218),
-                cornerRadius = CornerRadius(size.height / 4f, size.height / 4f),
+                cornerRadius = radius,
             )
             drawContent()
             drawRoundRect(
@@ -66,8 +80,11 @@ fun Modifier.fallbackGlass(shape: Shape = RoundedCornerShape(24.dp)): Modifier {
                     0f to HighlightCold,
                     0.18f to Color.Transparent,
                 ),
-                cornerRadius = CornerRadius(size.height / 4f, size.height / 4f),
+                cornerRadius = radius,
             )
         }
         .border(1.dp, Color(0x33E8F4FF), shape)
 }
+
+@Composable
+fun glassAvailable(): Boolean = canUseBackdropEngine()
