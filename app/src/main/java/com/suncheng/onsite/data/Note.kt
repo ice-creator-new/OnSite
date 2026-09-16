@@ -35,6 +35,7 @@ data class NoteListItem(
     val expiresAt: Long,
     val unlockedAt: Long?,
     val status: NoteStatus,
+    val coverUrl: String? = null,
 )
 
 data class UnlockedNote(
