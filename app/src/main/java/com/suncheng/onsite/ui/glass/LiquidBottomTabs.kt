@@ -37,7 +37,6 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
-import com.kyant.shapes.Capsule
 import com.suncheng.onsite.ui.theme.IceFg
 import com.suncheng.onsite.ui.theme.IceMuted
 
@@ -46,6 +45,10 @@ data class BottomTab(
     val icon: ImageVector,
 )
 
+/**
+ * 悬浮胶囊底栏。对照 Kyant LiquidBottomTabs：
+ * 整条取样背后内容 + 选中液滴单独一层折射。
+ */
 @Composable
 fun OnSiteLiquidBottomTabs(
     tabs: List<BottomTab>,
@@ -59,7 +62,9 @@ fun OnSiteLiquidBottomTabs(
     val tabCount = tabs.size.coerceAtLeast(1)
 
     BoxWithConstraints(
-        modifier = modifier.fillMaxWidth().height(64.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         val tabWidth = maxWidth / tabCount
@@ -70,17 +75,21 @@ fun OnSiteLiquidBottomTabs(
         )
 
         Box(
-            Modifier.fillMaxSize().drawBackdrop(
-                backdrop = backdrop,
-                shape = { runCatching { Capsule() }.getOrDefault(capsule) },
-                effects = {
-                    vibrancy()
-                    blur(8.dp.toPx())
-                    if (canUseLens()) lens(24.dp.toPx(), 24.dp.toPx())
-                },
-                highlight = { Highlight.Default.copy(alpha = 0.45f) },
-                onDrawSurface = { drawRect(containerColor) },
-            )
+            Modifier
+                .fillMaxSize()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { capsule },
+                    effects = {
+                        vibrancy()
+                        blur(8.dp.toPx())
+                        if (canUseLens()) {
+                            lens(24.dp.toPx(), 24.dp.toPx())
+                        }
+                    },
+                    highlight = { Highlight.Default.copy(alpha = 0.45f) },
+                    onDrawSurface = { drawRect(containerColor) },
+                )
         )
 
         Box(
@@ -92,7 +101,7 @@ fun OnSiteLiquidBottomTabs(
                 .padding(vertical = 4.dp)
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = { runCatching { Capsule() }.getOrDefault(capsule) },
+                    shape = { capsule },
                     effects = {
                         vibrancy()
                         blur(6.dp.toPx())
@@ -133,7 +142,9 @@ fun OnSiteLiquidBottomTabs(
                         Icon(
                             imageVector = tab.icon,
                             contentDescription = tab.label,
-                            modifier = Modifier.size(18.dp).scale(scale),
+                            modifier = Modifier
+                                .size(18.dp)
+                                .scale(scale),
                             tint = if (selected) IceFg else IceMuted,
                         )
                         Spacer(Modifier.width(6.dp))
