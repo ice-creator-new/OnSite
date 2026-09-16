@@ -4,6 +4,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,18 +22,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.awaitFirstDown
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -64,7 +65,9 @@ data class BottomTab(
 )
 
 private val Settle = spring<Float>(dampingRatio = 0.68f, stiffness = 260f)
-private val Press = spring<Float>(dampingRatio = 0.82f, stiffness = 500f)
+private val PressSpring = spring<Float>(dampingRatio = 0.82f, stiffness = 500f)
+private val TabMaxWidth = 76.dp
+private val BarHeight = 49.dp
 
 @Composable
 fun OnSiteLiquidBottomTabs(
@@ -80,27 +83,30 @@ fun OnSiteLiquidBottomTabs(
     val tabCount = tabs.size.coerceAtLeast(1)
     val density = LocalDensity.current
     val view = LocalView.current
-    val settleScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
-    val droplet = remember { Animatable(0f) }
+    val settled = remember { Animatable(0f) }
     val press = remember { Animatable(0f) }
     var dragging by remember { mutableStateOf(false) }
+    var dragX by remember { mutableFloatStateOf(0f) }
     var hoverIndex by remember { mutableIntStateOf(selectedIndex) }
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
-        contentAlignment = Alignment.CenterStart,
+            .height(BarHeight),
+        contentAlignment = Alignment.Center,
     ) {
-        val tabWidthPx = with(density) { maxWidth.toPx() } / tabCount
-        val tabWidth = maxWidth / tabCount
+        val itemWidth = minOf(TabMaxWidth, maxWidth / tabCount)
+        val barWidth = itemWidth * tabCount
+        val tabWidthPx = with(density) { itemWidth.toPx() }
         val maxTravel = (tabCount - 1) * tabWidthPx
+        val dropletX = if (dragging) dragX else settled.value
 
         LaunchedEffect(selectedIndex, tabWidthPx) {
             if (!dragging && tabWidthPx > 0f) {
                 hoverIndex = selectedIndex
-                droplet.animateTo(selectedIndex * tabWidthPx, Settle)
+                settled.animateTo(selectedIndex * tabWidthPx, Settle)
             }
         }
 
@@ -111,7 +117,8 @@ fun OnSiteLiquidBottomTabs(
 
         Box(
             Modifier
-                .fillMaxSize()
+                .width(barWidth)
+                .height(BarHeight)
                 .then(
                     if (canUseBackdropEngine()) {
                         Modifier.drawBackdrop(
@@ -137,12 +144,12 @@ fun OnSiteLiquidBottomTabs(
                     if (tabWidthPx <= 0f) return@pointerInput
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        droplet.stop()
                         val tracker = VelocityTracker()
                         tracker.addPosition(down.uptimeMillis, down.position)
-                        var lastHover = indexOf(droplet.value)
+                        dragX = settled.value
                         dragging = true
-                        settleScope.launch { press.animateTo(1f, Press) }
+                        var lastHover = indexOf(dragX)
+                        scope.launch { press.animateTo(1f, PressSpring) }
 
                         while (true) {
                             val event = awaitPointerEvent()
@@ -152,9 +159,8 @@ fun OnSiteLiquidBottomTabs(
                             if (delta == 0f) continue
                             tracker.addPosition(change.uptimeMillis, change.position)
                             change.consume()
-                            val next = (droplet.value + delta).coerceIn(0f, maxTravel)
-                            droplet.snapTo(next)
-                            val hover = indexOf(next)
+                            dragX = (dragX + delta).coerceIn(0f, maxTravel)
+                            val hover = indexOf(dragX)
                             if (hover != lastHover) {
                                 lastHover = hover
                                 hoverIndex = hover
@@ -163,86 +169,90 @@ fun OnSiteLiquidBottomTabs(
                         }
 
                         dragging = false
-                        settleScope.launch { press.animateTo(0f, Press) }
-                        val vx = tracker.calculateVelocity().x
-                        val projected = (droplet.value + vx * 0.08f).coerceIn(0f, maxTravel)
+                        scope.launch { press.animateTo(0f, PressSpring) }
+                        val projected = (dragX + tracker.calculateVelocity().x * 0.08f)
+                            .coerceIn(0f, maxTravel)
                         val target = indexOf(projected)
                         hoverIndex = target
                         if (target != selectedIndex) onSelected(target)
-                        settleScope.launch { droplet.animateTo(target * tabWidthPx, Settle) }
+                        val end = dragX
+                        scope.launch {
+                            settled.snapTo(end)
+                            settled.animateTo(target * tabWidthPx, Settle)
+                        }
                     }
                 },
-        )
-
-        Box(
-            Modifier
-                .padding(horizontal = 5.dp, vertical = 5.dp)
-                .width(tabWidth - 10.dp)
-                .fillMaxHeight()
-                .graphicsLayer {
-                    translationX = droplet.value
-                    val p = press.value
-                    scaleX = 1f + 0.18f * p
-                    scaleY = 1f + 0.06f * p
-                }
-                .then(
-                    if (canUseBackdropEngine()) {
-                        Modifier.drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { capsule },
-                            effects = {
-                                val p = press.value
-                                blur(3.dp.toPx())
-                                if (!mild) vibrancy()
-                                lens(
-                                    refractionHeight = 10.dp.toPx() + 8.dp.toPx() * p,
-                                    refractionAmount = 16.dp.toPx() + 10.dp.toPx() * p,
-                                    chromaticAberration = !mild,
-                                )
-                            },
-                            highlight = { Highlight.Default.copy(alpha = 0.78f) },
-                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
-                        )
-                    } else {
-                        Modifier.fallbackGlass(capsule)
-                    },
-                ),
-        )
-
-        Row(Modifier.fillMaxSize()) {
-            tabs.forEachIndexed { index, tab ->
-                val selected = index == hoverIndex
-                val tint = if (selected) IceAccent else IceMuted
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .semantics {
-                            role = Role.Tab
-                            this.selected = selected
-                        }
-                        .graphicsLayer {
-                            val s = if (selected) 1.08f else 1f
-                            scaleX = s
-                            scaleY = s
+        ) {
+            Box(
+                Modifier
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                    .width(itemWidth - 8.dp)
+                    .fillMaxHeight()
+                    .graphicsLayer {
+                        translationX = dropletX
+                        val p = press.value
+                        scaleX = 1f + 0.14f * p
+                        scaleY = 1f + 0.05f * p
+                    }
+                    .then(
+                        if (canUseBackdropEngine()) {
+                            Modifier.drawBackdrop(
+                                backdrop = backdrop,
+                                shape = { capsule },
+                                effects = {
+                                    val p = press.value
+                                    blur(3.dp.toPx())
+                                    if (!mild) vibrancy()
+                                    lens(
+                                        refractionHeight = 10.dp.toPx() + 6.dp.toPx() * p,
+                                        refractionAmount = 14.dp.toPx() + 8.dp.toPx() * p,
+                                        chromaticAberration = !mild,
+                                    )
+                                },
+                                highlight = { Highlight.Default.copy(alpha = 0.78f) },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.10f)) },
+                            )
+                        } else {
+                            Modifier.fallbackGlass(capsule)
                         },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.label,
-                        modifier = Modifier.size(22.dp),
-                        tint = tint,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = tab.label,
-                        color = tint,
-                        fontSize = 10.sp,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        letterSpacing = 0.2.sp,
-                    )
+                    ),
+            )
+
+            Row(Modifier.fillMaxSize()) {
+                tabs.forEachIndexed { index, tab ->
+                    val selected = index == hoverIndex
+                    val tint = if (selected) IceAccent else IceMuted
+                    Column(
+                        modifier = Modifier
+                            .width(itemWidth)
+                            .fillMaxHeight()
+                            .semantics {
+                                role = Role.Tab
+                                this.selected = selected
+                            }
+                            .graphicsLayer {
+                                val s = if (selected) 1.04f else 1f
+                                scaleX = s
+                                scaleY = s
+                            },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = tab.label,
+                            modifier = Modifier.size(22.dp),
+                            tint = tint,
+                        )
+                        Spacer(Modifier.height(1.dp))
+                        Text(
+                            text = tab.label,
+                            color = tint,
+                            fontSize = 10.sp,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            letterSpacing = 0.15.sp,
+                        )
+                    }
                 }
             }
         }
